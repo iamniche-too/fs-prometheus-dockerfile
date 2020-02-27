@@ -1,0 +1,54 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+# see https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config
+# here we configure scrape targets based on services in the kafka namespace
+kubernetes_sd_configs:
+- role: services 
+  namespaces:
+    names:
+    - kafka 
+
+# see https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+# here we dynamically rewrite the label set of a target before it gets scraped 
+relabel_configs:
+- source_labels: [__meta_kubernetes_service_label_app]
+  separator: ;
+  regex: config-example
+  replacement: $1
+  action: keep
+- source_labels: [__meta_kubernetes_endpoint_port_name]
+  separator: ;
+  regex: https
+  replacement: $1
+  action: keep
+- source_labels: [__meta_kubernetes_namespace]
+  separator: ;
+  regex: (.*)
+  target_label: namespace
+  replacement: $1
+  action: replace
+- source_labels: [__meta_kubernetes_pod_name]
+  separator: ;
+  regex: (.*)
+  target_label: pod
+  replacement: $1
+  action: replace
+- source_labels: [__meta_kubernetes_service_name]
+  separator: ;
+  regex: (.*)
+  target_label: service
+  replacement: $1
+  action: replace
+- source_labels: [__meta_kubernetes_service_name]
+  separator: ;
+  regex: (.*)
+  target_label: job
+  replacement: ${1}
+  action: replace
+- separator: ;
+  regex: (.*)
+  target_label: endpoint
+  replacement: https
+  action: replace
